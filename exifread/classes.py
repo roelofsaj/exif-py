@@ -472,6 +472,34 @@ class ExifHeader:
                 del self.tags[makernote.canon.CAMERA_INFO_TAG_NAME]
             return
 
+        #Reconyx
+        if make == 'RECONYX':
+            self._reconyx_decode_tag(note.values, makernote.reconyx.TAGS)
+
+    def _reconyx_decode_tag(self, value, mn_tags):
+        # Decode Reconyx tag based on offset within tag.
+        # All values are in increments of 2 (uint16)
+        for i, tag in mn_tags.items():
+            # tag = mn_tags.get(i, ('Unknown', ))
+            name = tag[0]
+            if len(tag) > 2:
+                val = int.from_bytes(bytes(value[i:i+tag[1]]), byteorder='little')
+                val = tag[2].get(val, 'Unknown')
+            elif tag[1] == 2:
+                # convert to an int
+                val = int.from_bytes(bytes(value[i:i+tag[1]]), byteorder='little')
+            else:
+                val = value[i:i+tag[1]]
+            try:
+                logger.debug(" %s %s %s", i, name, hex(value[i]))
+            except TypeError:
+                logger.debug(" %s %s %s", i, name, value[i])
+
+            # it's not a real IFD Tag but we fake one to make everybody
+            # happy. this will have a "proprietary" type
+            self.tags['MakerNote ' + name] = IfdTag(str(val), None, 0, None,
+                                                    None, None)
+
     def _olympus_decode_tag(self, value, mn_tags):
         """ TODO Decode Olympus MakerNote tag based on offset within tag."""
         pass
