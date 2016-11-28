@@ -1,5 +1,6 @@
 import struct
 import re
+import datetime
 
 from .exif_log import get_logger
 from .utils import s2n_motorola, s2n_intel, Ratio
@@ -482,14 +483,28 @@ class ExifHeader:
         for i, tag in mn_tags.items():
             # tag = mn_tags.get(i, ('Unknown', ))
             name = tag[0]
-            if len(tag) > 2:
-                val = int.from_bytes(bytes(value[i:i+tag[1]]), byteorder='little')
-                val = tag[2].get(val, 'Unknown')
-            elif tag[1] == 2:
-                # convert to an int
-                val = int.from_bytes(bytes(value[i:i+tag[1]]), byteorder='little')
-            else:
-                val = value[i:i+tag[1]]
+            val_type = tag[1]
+            val = value[i:i+tag[2]]
+            if val_type == 'uint16':
+                val = int.from_bytes(bytes(val), byteorder='little')
+            elif val_type == 'string':
+                # These are strings where every byte represents a character
+                val = bytes(val)
+                val = val.decode()
+                # Remove empty bytes
+                val = val.strip('\x00')
+            elif val_type == 'string16':
+                # This seems overly complicated
+                # These strings are encoded as 16-bit unsigned ints that represent unicode values.
+                val = bytes([int.from_bytes(bytes(val[x:x + 2]), byteorder='little') for x in range(0, len(val) - 1, 2)])
+                val = val.decode()
+                val = val.strip('\x00')
+            elif val_type == 'date':
+                val = [int.from_bytes(bytes(val[x:x+2]), byteorder='little') for x in range(0,len(val)-1,2)]
+                val = datetime.datetime(year=val[5], month=val[3], day=val[4],
+                                        hour=val[2], minute=val[1], second=val[0])
+            if len(tag) > 3:
+                val = tag[3].get(val, 'Unknown')
             try:
                 logger.debug(" %s %s %s", i, name, hex(value[i]))
             except TypeError:
