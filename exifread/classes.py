@@ -496,8 +496,8 @@ class ExifHeader:
             elif val_type == 'string16':
                 # This seems overly complicated
                 # These strings are encoded as 16-bit unsigned ints that represent unicode values.
-                val = bytes([int.from_bytes(bytes(val[x:x + 2]), byteorder='little') for x in range(0, len(val) - 1, 2)])
-                val = val.decode()
+                val = [int.from_bytes(bytes(val[x:x + 2]), byteorder='little') for x in range(0, len(val) - 1, 2)]
+                val = bytes(val).decode()
                 val = val.strip('\x00')
             elif val_type == 'date':
                 val = [int.from_bytes(bytes(val[x:x+2]), byteorder='little') for x in range(0,len(val)-1,2)]
