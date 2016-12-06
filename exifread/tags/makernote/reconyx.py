@@ -41,6 +41,6 @@ TAGS = {
         0x1: 'On'
     }),
     82: ('MotionSensitivity', 'uint16', 2, ),
-    84: ('BatteryVoltage', 'uint16', 2, ),
+    84: ('BatteryVoltage', 'float', 2, ),
     86: ('UserLabel', 'string', 32, )
 }

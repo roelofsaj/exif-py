@@ -1,6 +1,7 @@
 import struct
 import re
 import datetime
+from numpy import frombuffer
 
 from .exif_log import get_logger
 from .utils import s2n_motorola, s2n_intel, Ratio
@@ -487,24 +488,36 @@ class ExifHeader:
             val = value[i:i+tag[2]]
             if val_type == 'uint16':
                 val = int.from_bytes(bytes(val), byteorder='little')
+                val_string = str(val)
             elif val_type == 'string':
                 # These are strings where every byte represents a character
-                val = bytes(val)
-                val = val.decode()
+                val_string = bytes(val)
+                val_string = val_string.decode()
                 # Remove empty bytes
-                val = val.strip('\x00')
+                val_string = val_string.strip('\x00')
+                val = val_string
             elif val_type == 'string16':
                 # This seems overly complicated
                 # These strings are encoded as 16-bit unsigned ints that represent unicode values.
                 val = [int.from_bytes(bytes(val[x:x + 2]), byteorder='little') for x in range(0, len(val) - 1, 2)]
-                val = bytes(val).decode()
-                val = val.strip('\x00')
+                val_string = bytes(val).decode()
+                val_string = val_string.strip('\x00')
+                val = val_string
+            elif val_type == 'float':
+                # This is from https://github.com/alchemy-fr/exiftool/blob/master/lib/Image/ExifTool/Reconyx.pm.
+                # I'm going to assume it's right because I have nothing else to go on.
+                val = int.from_bytes(bytes(val), byteorder='little')
+                val = val/1000
+                val_string = str(val)
             elif val_type == 'date':
-                val = [int.from_bytes(bytes(val[x:x+2]), byteorder='little') for x in range(0,len(val)-1,2)]
-                val = datetime.datetime(year=val[5], month=val[3], day=val[4],
-                                        hour=val[2], minute=val[1], second=val[0])
+                val_string = [int.from_bytes(bytes(val[x:x+2]), byteorder='little') for x in range(0,len(val)-1,2)]
+                val_string = datetime.datetime(year=val_string[5], month=val_string[3], day=val_string[4],
+                                        hour=val_string[2], minute=val_string[1], second=val_string[0])
+                val_string = str(val_string)
+                val = val_string
             if len(tag) > 3:
-                val = tag[3].get(val, 'Unknown')
+                val_string = tag[3].get(val, 'Unknown')
+
             try:
                 logger.debug(" %s %s %s", i, name, hex(value[i]))
             except TypeError:
@@ -512,7 +525,7 @@ class ExifHeader:
 
             # it's not a real IFD Tag but we fake one to make everybody
             # happy. this will have a "proprietary" type
-            self.tags['MakerNote ' + name] = IfdTag(str(val), None, 0, None,
+            self.tags['MakerNote ' + name] = IfdTag(val_string, None, 0, val,
                                                     None, None)
 
     def _olympus_decode_tag(self, value, mn_tags):
