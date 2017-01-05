@@ -525,7 +525,7 @@ class ExifHeader:
 
             # it's not a real IFD Tag but we fake one to make everybody
             # happy. this will have a "proprietary" type
-            self.tags['MakerNote ' + name] = IfdTag(val_string, None, 0, val,
+            self.tags['MakerNote ' + name] = IfdTag(val_string, None, 0,  val,
                                                     None, None)
 
     def _olympus_decode_tag(self, value, mn_tags):
