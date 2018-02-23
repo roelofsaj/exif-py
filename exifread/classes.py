@@ -476,7 +476,10 @@ class ExifHeader:
 
         #Reconyx
         if make == 'RECONYX':
-            self._reconyx_decode_tag(note.values, makernote.reconyx.TAGS)
+            if self.tags['Image Model'].printable=='UltraFire':
+                self._reconyx_decode_tag(note.values, makernote.reconyx.TAGSUF)
+            else:
+                self._reconyx_decode_tag(note.values, makernote.reconyx.TAGS)
 
     def _reconyx_decode_tag(self, value, mn_tags):
         # Decode Reconyx tag based on offset within tag.

@@ -44,3 +44,14 @@ TAGS = {
     84: ('BatteryVoltage', 'float', 2, ),
     86: ('UserLabel', 'string', 32, )
 }
+# UltraFire cameras seem to have different tags; these are the ones I can easily figure out or care about
+TAGSUF = {
+    52: ('TriggerMode', 'uint16', 1, {
+        0x4d: 'Motion Detection',
+        0x54: 'Time Lapse' }),
+    53: ('SequencePosition', 'uint16', 1, ),
+    54: ('ImagesInSequence', 'uint16', 1, ),
+    68: ('AmbientTemperatureF', 'uint16', 1, ),
+    75: ('SerialNumber', 'string', 14, ),
+    90: ('UserLabel', 'string', 20, )
+}
